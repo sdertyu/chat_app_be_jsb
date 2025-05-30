@@ -25,12 +25,11 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
-            if(userRepository.findByEmail("admin").isEmpty())
-            {
+            if (userRepository.findByEmail("admin").isEmpty()) {
                 HashSet<String> roles = new HashSet<>();
                 roles.add(Role.ADMIN.name());
-
-                com.pngo.chat_app.entity.User user = User.builder()
+//                String roles = Role.ADMIN.name();
+                User user = User.builder()
                         .email("admin")
                         .password(passwordEncoder.encode("admin"))
                         .roles(roles)

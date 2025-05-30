@@ -69,7 +69,7 @@ public class AuthenService {
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
                 ))
-                .claim("scope", buildScope(user))
+                .claim("scope", user.getRoles())
                 .build();
 
         Payload payload = new Payload(claimsSet.toJSONObject());
@@ -99,14 +99,14 @@ public class AuthenService {
 
     }
 
-    private String buildScope(User user) {
-        StringJoiner joiner = new StringJoiner(" ");
-        if(!CollectionUtils.isEmpty(user.getRoles()))
-        {
-            user.getRoles().forEach(joiner::add);
-        }
-        return joiner.toString();
-    }
+//    private String buildScope(User user) {
+//        StringJoiner joiner = new StringJoiner(" ");
+//        if(!CollectionUtils.isEmpty(user.getRoles()))
+//        {
+//            user.getRoles().forEach(joiner::add);
+//        }
+//        return joiner.toString();
+//    }
 
 
 }

@@ -46,19 +46,22 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Builder.Default
     @Column(name = "is_reported", nullable = false)
     private Boolean isReported = false;
 
+    @Builder.Default
     @Column(name = "is_blocked", nullable = false)
     private Boolean isBlocked = false;
 
     @Column(name = "preferences", columnDefinition = "TEXT")
     private String preferences;
 
-    @Column(name = "roles", columnDefinition = "ENUM('USER', 'ADMIN')", nullable = false)
+    @Column(name = "roles")
     private Set<String> roles;
 
     @CreationTimestamp
