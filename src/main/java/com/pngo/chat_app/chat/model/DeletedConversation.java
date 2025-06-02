@@ -2,16 +2,16 @@ package com.pngo.chat_app.chat.model;
 
 import com.pngo.chat_app.user.model.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "deleted_conversations")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"conversation", "user"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeletedConversation {

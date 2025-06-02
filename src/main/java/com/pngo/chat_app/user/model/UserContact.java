@@ -1,9 +1,7 @@
 package com.pngo.chat_app.user.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,7 +10,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_contact")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"user", "contact"})
 @NoArgsConstructor
 @AllArgsConstructor
 @IdClass(UserContact.UserContactId.class)

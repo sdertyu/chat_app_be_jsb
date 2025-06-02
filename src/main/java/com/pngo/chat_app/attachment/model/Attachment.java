@@ -2,9 +2,7 @@ package com.pngo.chat_app.attachment.model;
 
 import com.pngo.chat_app.chat.model.Message;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,7 +10,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attachments")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"message"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Attachment {

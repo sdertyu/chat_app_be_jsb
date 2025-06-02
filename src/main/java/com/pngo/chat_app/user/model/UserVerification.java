@@ -1,16 +1,16 @@
 package com.pngo.chat_app.user.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_verification")
-@Data
+@Getter
+@Setter
+@ToString(exclude = "user")
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserVerification {

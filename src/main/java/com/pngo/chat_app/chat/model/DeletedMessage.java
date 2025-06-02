@@ -2,9 +2,7 @@ package com.pngo.chat_app.chat.model;
 
 import com.pngo.chat_app.user.model.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -12,7 +10,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "deleted_messages")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"message", "user"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeletedMessage {

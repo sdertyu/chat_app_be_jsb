@@ -13,7 +13,7 @@ import java.io.Serializable;
 //@Data
 @Getter
 @Setter
-@ToString(exclude = {"user"})
+@ToString(exclude = {"user", "role"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

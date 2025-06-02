@@ -4,9 +4,7 @@ import com.pngo.chat_app.report.model.BlockList;
 import com.pngo.chat_app.report.model.Report;
 import com.pngo.chat_app.user.model.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -15,7 +13,9 @@ import java.util.Set;
 
 @Entity
 @Table(name = "participants")
-@Data
+@Getter
+@Setter
+@ToString(exclude = {"conversation", "user", "lastReadMessage", "blockedBy", "reportedBy"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Participant {

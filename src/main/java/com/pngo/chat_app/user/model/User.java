@@ -18,7 +18,7 @@ import java.util.Set;
 //@Data
 @Getter
 @Setter
-@ToString(exclude = {"userRoles"})
+@ToString(exclude = {"userRoles", "authProviders", "sentMessages", "participants", "refreshTokens"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
