@@ -5,6 +5,8 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.pngo.chat_app.common.configuration.CookieBearerTokenResolver;
+import com.pngo.chat_app.user.mapper.UserMapper;
 import com.pngo.chat_app.user.dto.request.UserLogin;
 import com.pngo.chat_app.common.dto.request.IntrospectRequest;
 import com.pngo.chat_app.user.dto.request.UserSignup;
@@ -15,6 +17,7 @@ import com.pngo.chat_app.common.exception.AppException;
 import com.pngo.chat_app.common.enums.ErrorCode;
 import com.pngo.chat_app.user.repository.UserRepository;
 import com.pngo.chat_app.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,6 +42,7 @@ public class AuthenService {
     UserService userService;
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
+    UserMapper userMapper;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -46,7 +50,7 @@ public class AuthenService {
 
     public AuthenticationResponse authentication(UserLogin request) {
         log.warn("f1");
-        var user = userRepository.findByEmailWithUserRoles(request.getEmail())
+        User user = userRepository.findByEmailWithUserRoles(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
@@ -63,6 +67,7 @@ public class AuthenService {
 
         return AuthenticationResponse.builder()
                 .token(token)
+                .user(userMapper.userToUserResponse(user))
                 .authenticated(true)
                 .build();
 
@@ -122,6 +127,69 @@ public class AuthenService {
                 .valid(check && expirationTime.after(new Date()))
                 .build();
 
+    }
+
+    public boolean verifyToken(HttpServletRequest request) {
+        try {
+            CookieBearerTokenResolver cookieBearerTokenResolver = new CookieBearerTokenResolver();
+            String token = cookieBearerTokenResolver.resolve(request);
+            if (token == null) {
+                return false;
+            }
+
+            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            // Verify signature
+            boolean validSignature = signedJWT.verify(verifier);
+
+            // Check expiration
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            boolean notExpired = expirationTime != null && expirationTime.after(new Date());
+
+            return validSignature && notExpired;
+        } catch (ParseException | JOSEException e) {
+            log.error("Error verifying token", e);
+            return false;
+        }
+    }
+
+    public AuthenticationResponse refreshToken(HttpServletRequest request) {
+        try {
+            CookieBearerTokenResolver cookieBearerTokenResolver = new CookieBearerTokenResolver();
+            String token = cookieBearerTokenResolver.resolve(request);
+            if (token == null) {
+                throw new AppException(ErrorCode.UNAUTHENICATION);
+            }
+
+            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+            SignedJWT signedJWT = SignedJWT.parse(token);
+
+            // Verify signature
+            boolean validSignature = signedJWT.verify(verifier);
+
+            // Check expiration
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            if (!validSignature || expirationTime == null || !expirationTime.after(new Date())) {
+                throw new AppException(ErrorCode.UNAUTHENICATION);
+            }
+
+            // Generate new token
+            User user = userRepository.findByEmail(signedJWT.getJWTClaimsSet().getSubject())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+
+            String newToken = generateToken(user);
+
+            return AuthenticationResponse.builder()
+                    .token(newToken)
+                    .user(userMapper.userToUserResponse(user))
+                    .authenticated(true)
+                    .build();
+
+        } catch (ParseException | JOSEException e) {
+            log.error("Error refreshing token", e);
+            throw new AppException(ErrorCode.UNAUTHENICATION);
+        }
     }
 
 //    private String buildScope(User user) {

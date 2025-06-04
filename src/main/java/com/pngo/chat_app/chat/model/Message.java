@@ -1,5 +1,6 @@
 package com.pngo.chat_app.chat.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pngo.chat_app.attachment.model.Attachment;
 import com.pngo.chat_app.user.model.User;
 import jakarta.persistence.*;
@@ -44,20 +45,25 @@ public class Message {
     private LocalDateTime deletedAt;
 
     // Relationships
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", insertable = false, updatable = false)
     private Conversation conversation;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", insertable = false, updatable = false)
     private User sender;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Attachment> attachments;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<DeletedMessage> deletedMessages;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "lastReadMessage", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Participant> lastReadByParticipants;
 

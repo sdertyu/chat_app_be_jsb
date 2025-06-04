@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
-            "/test", "/test2", "/auth/login",  "/auth/signup",
+            "/test", "/test2", "/auth/login", "/auth/signup",
     };
 
     @Value("${jwt.signerKey}")
@@ -35,15 +35,15 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(request -> request
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, "/user").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/user").hasAuthority("ROLE_USER")
                 .anyRequest().authenticated()
         );
 
         http.oauth2ResourceServer(oauth2 ->
                 oauth2.jwt(jwtConfigurer ->
-                        jwtConfigurer.decoder(jwtDecoder())
-//                                .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                )
+                                jwtConfigurer.decoder(jwtDecoder())
+                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                        )
                         .bearerTokenResolver(new CookieBearerTokenResolver())
         );
 

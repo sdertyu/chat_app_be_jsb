@@ -3,7 +3,7 @@ package com.pngo.chat_app.user.service;
 import com.pngo.chat_app.user.dto.request.UserSignup;
 import com.pngo.chat_app.user.model.User;
 import com.pngo.chat_app.common.enums.RoleEnum;
-import com.pngo.chat_app.common.mapper.UserMapper;
+import com.pngo.chat_app.user.mapper.UserMapper;
 import com.pngo.chat_app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
@@ -36,5 +37,9 @@ public class UserService {
 
         userRoleService.addUserRole(saveUser.getId(), RoleEnum.USER.ordinal() + 1);
 
+    }
+
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }

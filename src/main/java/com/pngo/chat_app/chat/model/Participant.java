@@ -1,5 +1,6 @@
 package com.pngo.chat_app.chat.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pngo.chat_app.report.model.BlockList;
 import com.pngo.chat_app.report.model.Report;
 import com.pngo.chat_app.user.model.User;
@@ -47,21 +48,26 @@ public class Participant {
     private LocalDateTime updatedAt;
 
     // Relationships
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", insertable = false, updatable = false)
     private Conversation conversation;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id", insertable = false, updatable = false)
     private User user;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lastReadMessageId", insertable = false, updatable = false)
     private Message lastReadMessage;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<BlockList> blockLists;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Report> reports;
 
