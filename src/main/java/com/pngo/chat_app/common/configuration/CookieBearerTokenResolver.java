@@ -15,4 +15,17 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
         }
         return null;
     }
+
+    public String resolveRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if ("rf_tkn".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
+
 }

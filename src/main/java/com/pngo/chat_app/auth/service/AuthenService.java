@@ -5,6 +5,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.pngo.chat_app.auth.model.RefreshToken;
 import com.pngo.chat_app.common.configuration.CookieBearerTokenResolver;
 import com.pngo.chat_app.user.mapper.UserMapper;
 import com.pngo.chat_app.user.dto.request.UserLogin;
@@ -19,6 +20,7 @@ import com.pngo.chat_app.user.repository.UserRepository;
 import com.pngo.chat_app.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -43,13 +46,21 @@ public class AuthenService {
     UserRepository userRepository;
     PasswordEncoder passwordEncoder;
     UserMapper userMapper;
+    RefreshTokenService refreshTokenService;
 
     @NonFinal
     @Value("${jwt.signerKey}")
     protected String SIGNER_KEY;
 
+    @NonFinal
+    @Value("${jwt.keyTimeToLive}")
+    protected Integer KEY_TIME_TO_LIVE;
+
+    @NonFinal
+    @Value("${jwt.keyTimeRefresh}")
+    protected Integer KEY_TIME_REFRESH;
+
     public AuthenticationResponse authentication(UserLogin request) {
-        log.warn("f1");
         User user = userRepository.findByEmailWithUserRoles(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -63,10 +74,31 @@ public class AuthenService {
                 .collect(Collectors.joining(" "));
 
 
-        String token = generateToken(user);
+        String token = generateToken(user, KEY_TIME_TO_LIVE);
+        String rfToken = generateToken(user, KEY_TIME_REFRESH);
+
+        RefreshToken refreshToken = refreshTokenService.findRefreshTokenNotExpires(user.getId());
+        if (refreshToken == null) {
+            refreshToken = RefreshToken.builder()
+                    .userId(user.getId())
+                    .token(rfToken)
+                    .expiresAt(LocalDateTime.now().plusDays(KEY_TIME_REFRESH))
+                    .ipAddress("")
+                    .userAgent("")
+                    .revoked(false)
+                    .build();
+        } else {
+            refreshToken.setToken(rfToken);
+            refreshToken.setExpiresAt(LocalDateTime.now().plusDays(KEY_TIME_REFRESH));
+        }
+
+        log.warn(refreshToken.toString());
+
+        refreshTokenService.saveRefreshToken(refreshToken);
 
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(rfToken)
                 .user(userMapper.userToUserResponse(user))
                 .authenticated(true)
                 .build();
@@ -83,7 +115,7 @@ public class AuthenService {
         return true;
     }
 
-    private String generateToken(User user) {
+    private String generateToken(User user, Integer time) {
 
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
         log.info(user.toString());
@@ -97,7 +129,7 @@ public class AuthenService {
                 .issuer("chat_app")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
+                        Instant.now().plus(time, ChronoUnit.DAYS).toEpochMilli()
                 ))
                 .claim("scope", String.join(" ", roleNames))
                 .build();
@@ -157,28 +189,26 @@ public class AuthenService {
     public AuthenticationResponse refreshToken(HttpServletRequest request) {
         try {
             CookieBearerTokenResolver cookieBearerTokenResolver = new CookieBearerTokenResolver();
-            String token = cookieBearerTokenResolver.resolve(request);
+            String token = cookieBearerTokenResolver.resolveRefreshToken(request);
             if (token == null) {
                 throw new AppException(ErrorCode.UNAUTHENICATION);
             }
-
-            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
             SignedJWT signedJWT = SignedJWT.parse(token);
 
-            // Verify signature
-            boolean validSignature = signedJWT.verify(verifier);
-
-            // Check expiration
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-            if (!validSignature || expirationTime == null || !expirationTime.after(new Date())) {
-                throw new AppException(ErrorCode.UNAUTHENICATION);
-            }
-
-            // Generate new token
             User user = userRepository.findByEmail(signedJWT.getJWTClaimsSet().getSubject())
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
 
-            String newToken = generateToken(user);
+            RefreshToken refreshToken = refreshTokenService.findRefreshTokenNotExpires(user.getId());
+
+            String newToken = "";
+            if (token.equals(refreshToken.getToken())) {
+                if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+                    throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+                } else {
+                    newToken = generateToken(user, KEY_TIME_TO_LIVE);
+                }
+            }
+
 
             return AuthenticationResponse.builder()
                     .token(newToken)
@@ -186,7 +216,7 @@ public class AuthenService {
                     .authenticated(true)
                     .build();
 
-        } catch (ParseException | JOSEException e) {
+        } catch (Exception e) {
             log.error("Error refreshing token", e);
             throw new AppException(ErrorCode.UNAUTHENICATION);
         }

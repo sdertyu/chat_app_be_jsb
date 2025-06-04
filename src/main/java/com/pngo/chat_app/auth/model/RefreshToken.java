@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @ToString(exclude = {"user"})
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class RefreshToken {
 
     @Id
@@ -47,4 +48,18 @@ public class RefreshToken {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
+
+    @Override
+    public String toString() {
+        return "RefreshToken{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", token='" + token + '\'' +
+                ", expiresAt=" + expiresAt +
+                ", revoked=" + revoked +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", userAgent='" + userAgent + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

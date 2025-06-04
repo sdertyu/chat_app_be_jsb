@@ -16,6 +16,8 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -38,9 +40,17 @@ public class AuthenController {
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60); // 1 hour
-        response.addCookie(cookie);
+        cookie.setMaxAge(60 * 60 * 24); // 1 hour
 
+        Cookie refreshCookie = new Cookie("rf_tkn", result.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(60 * 60 * 24 * 30); // 30 days
+
+
+        response.addCookie(cookie);
+        response.addCookie(refreshCookie);
         // Set authentication status
         return ApiResponse.<AuthenticationResponse>builder()
                 .message("Login successful")
@@ -79,13 +89,16 @@ public class AuthenController {
     ApiResponse<AuthenticationResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         AuthenticationResponse result = authenticationService.refreshToken(request);
 
+        if(!result.getToken().isEmpty()){
+            Cookie cookie = new Cookie("jwt", result.getToken());
+            cookie.setHttpOnly(true);
+            cookie.setSecure(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60 * 24); // 1 day
+            response.addCookie(cookie);
+        }
         // Set new JWT as HttpOnly cookie
-        Cookie cookie = new Cookie("jwt", result.getToken());
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(60 * 60); // 1 hour
-        response.addCookie(cookie);
+
 
         return ApiResponse.<AuthenticationResponse>builder()
                 .message("Token refreshed successfully")

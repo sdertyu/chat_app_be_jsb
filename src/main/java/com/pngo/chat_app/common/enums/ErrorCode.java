@@ -9,7 +9,9 @@ public enum ErrorCode {
 
     USER_NOT_EXISTS(1003, "User does not exist!"),
 
-    UNAUTHENICATION(1010, "Unauthenticated request!")
+    UNAUTHENICATION(1010, "Unauthenticated request!"),
+
+    REFRESH_TOKEN_EXPIRED(1001, "Refresh token expired!"),
     ;
 
     ErrorCode(int code, String message) {
