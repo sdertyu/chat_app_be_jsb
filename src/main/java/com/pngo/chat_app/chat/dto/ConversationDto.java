@@ -2,6 +2,7 @@ package com.pngo.chat_app.chat.dto;
 
 import com.pngo.chat_app.chat.model.Message;
 import com.pngo.chat_app.chat.model.Participant;
+import jakarta.persistence.OrderBy;
 import lombok.Data;
 
 import java.time.LocalDateTime;

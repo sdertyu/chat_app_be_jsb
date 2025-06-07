@@ -28,8 +28,8 @@ public class JwtHandshakeHandler extends DefaultHandshakeHandler {
 
         try {
             var jwt = jwtDecoder.decode(token);
-            String username = jwt.getSubject(); // hoặc "sub"
-            return () -> username;
+            String email = jwt.getSubject(); // hoặc "sub"
+            return () -> email;
         } catch (Exception e) {
             return null;
         }

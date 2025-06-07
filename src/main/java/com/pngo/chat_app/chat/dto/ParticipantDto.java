@@ -23,5 +23,5 @@ public class ParticipantDto {
 
     private LocalDateTime updatedAt;
 
-    private User user;
+    private UserDto user;
 }

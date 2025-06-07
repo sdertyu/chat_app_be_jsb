@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class MessageDto {
     private Integer id;
 
-    private Integer conversationId;
+private Integer conversationId;
 
     private Integer senderId;
 

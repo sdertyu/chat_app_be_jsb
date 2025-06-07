@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -13,5 +15,5 @@ public class ChatMessage {
     int senderId;
     String content;
     int conversationId;
-    Date createdAt;
+    LocalDateTime createdAt;
 }

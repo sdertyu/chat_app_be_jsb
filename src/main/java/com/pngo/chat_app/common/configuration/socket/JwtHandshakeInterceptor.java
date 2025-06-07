@@ -19,7 +19,7 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             var cookies = servletRequest.getServletRequest().getCookies();
             if (cookies != null) {
                 for (var cookie : cookies) {
-                    if ("Authorization".equals(cookie.getName())) {
+                    if ("jwt".equals(cookie.getName())) {
                         attributes.put("jwt", cookie.getValue());
                     }
                 }

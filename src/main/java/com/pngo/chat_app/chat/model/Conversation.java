@@ -56,6 +56,7 @@ public class Conversation {
 
     @JsonIgnore
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("createdAt ASC")
     private Set<Message> messages;
 
     @JsonIgnore
