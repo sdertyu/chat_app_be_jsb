@@ -95,4 +95,8 @@ public class SocketController {
     }
 
 
+    @MessageMapping("/chat.typing")
+    public void handleTyping(TypingPayload payload, Principal principal) {
+        messagingTemplate.convertAndSend("/topic/room/" + payload.getConversationId(), payload);
+    }
 }
