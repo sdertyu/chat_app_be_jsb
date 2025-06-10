@@ -4,6 +4,7 @@ import com.pngo.chat_app.chat.dto.socket.*;
 import com.pngo.chat_app.chat.mapper.MessageMapper;
 import com.pngo.chat_app.chat.service.ChatService;
 import com.pngo.chat_app.chat.service.ConversationService;
+import com.pngo.chat_app.chat.service.RedisService;
 import com.pngo.chat_app.chat.service.SocketService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -30,6 +33,7 @@ public class SocketController {
 
     ChatService chatService;
     ConversationService conversationService;
+    RedisService redisService;
 
     MessageMapper messageMapper;
 
@@ -64,34 +68,30 @@ public class SocketController {
 
     @MessageMapping("/chat.send")
     public void handleSendMessage(@Payload ChatMessage message, Principal principal) {
-//        ChatMessage saved = chatService.saveMessage(message);
         Integer conversationId = message.getConversationId();
+        String conversationKey = String.valueOf(conversationId);
 
         var newMessage = chatService.saveMessage(messageMapper.toEntity(message));
-
         message.setId(newMessage.getId());
         message.setCreatedAt(newMessage.getCreatedAt());
 
-        var participants = chatService.getParticipantInConversation(conversationId);
-//        System.out.println("Participants in conversation " + conversationId + ": " + participants);
+        Set<String> participants = redisService.getUsersInRoom(conversationKey);
+
         if (participants.isEmpty()) {
-            log.warn("No participants found for conversation {}", conversationId);
-            return;
+            participants = chatService.getParticipantInConversation(conversationId).stream()
+                    .map(p -> p.getUser().getEmail())
+                    .collect(Collectors.toSet());
+
+            participants.forEach(email -> redisService.addUserToRoom(conversationKey, email));
         }
-        log.info(principal.getName());
-        participants.forEach(
-                p -> {
-                    log.warn(p.getUser().getEmail());
-                    messagingTemplate.convertAndSendToUser(
-                            p.getUser().getEmail(),
-                            "/queue/notifications",
-                            message
-                    );
-                }
 
-        );
-
-
+        for (String email : participants) {
+            messagingTemplate.convertAndSendToUser(
+                    email,
+                    "/queue/notifications",
+                    message
+            );
+        }
     }
 
 
